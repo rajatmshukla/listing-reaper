@@ -22,7 +22,20 @@ ALLOWED_TOP_LEVEL_KEYS = {
     "pacing_seconds",
     "dedupe_by",
     "rules",
+    "scoring",
+    "output",
 }
+
+KNOWN_SIGNALS = {
+    "title_match",
+    "salary",
+    "freshness",
+    "description_depth",
+    "location_fit",
+    "penalty_overlong_title",
+}
+
+ALLOWED_OUTPUT_FORMATS = {"markdown", "csv", "json"}
 
 
 def render_regex_error(rule_id: str, pattern: str, err: re.error) -> str:
@@ -45,6 +58,38 @@ class ConfiguredRule:
 
 
 @dataclass
+class ScoringConfig:
+    """Configuration for candidate ranking and scoring."""
+
+    signals: dict[str, float] = field(default_factory=dict)
+    salary_ceiling: int = 200000
+    description_depth_cap: int = 2000
+    shortlist_size: int = 10
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "signals": dict(self.signals),
+            "salary_ceiling": self.salary_ceiling,
+            "description_depth_cap": self.description_depth_cap,
+            "shortlist_size": self.shortlist_size,
+        }
+
+
+@dataclass
+class OutputConfig:
+    """Configuration for report generation."""
+
+    formats: list[str] = field(default_factory=lambda: ["markdown"])
+    directory: str = "out"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "formats": list(self.formats),
+            "directory": self.directory,
+        }
+
+
+@dataclass
 class Config:
     """The runtime configuration for Reaper and Simulator."""
 
@@ -55,6 +100,8 @@ class Config:
     pacing_seconds: float = 0.0
     dedupe_by: list[str] = field(default_factory=lambda: ["title", "company"])
     rules: list[ConfiguredRule] = field(default_factory=list)
+    scoring: ScoringConfig = field(default_factory=ScoringConfig)
+    output: OutputConfig = field(default_factory=OutputConfig)
 
     def describe(self) -> str:
         """Return a plain-text description of the configuration and active rules."""
@@ -207,6 +254,100 @@ def _validate_rule_semantics(rule_id: str, params: dict[str, Any]) -> None:
             )
 
 
+def validate_scoring_config(data: Any) -> ScoringConfig:
+    """Validate a scoring configuration block."""
+    if not isinstance(data, dict):
+        raise ConfigError("The 'scoring' configuration must be a JSON object.")
+
+    allowed_keys = {"signals", "salary_ceiling", "description_depth_cap", "shortlist_size"}
+    for key in data:
+        if key not in allowed_keys:
+            raise ConfigError(
+                f"Unknown key in 'scoring' configuration: '{key}'. Allowed keys: {sorted(allowed_keys)}"
+            )
+
+    signals_raw = data.get("signals", {})
+    if not isinstance(signals_raw, dict):
+        raise ConfigError("The 'signals' field in 'scoring' must be a JSON object mapping signal names to weights.")
+
+    validated_signals: dict[str, float] = {}
+    for sig_name, weight in signals_raw.items():
+        if sig_name not in KNOWN_SIGNALS:
+            raise ConfigError(
+                f"Unknown scoring signal '{sig_name}'. Valid signals are: {sorted(KNOWN_SIGNALS)}"
+            )
+        if not isinstance(weight, (int, float)):
+            raise ConfigError(
+                f"Weight for scoring signal '{sig_name}' must be a numeric value, got {weight!r}."
+            )
+        validated_signals[sig_name] = float(weight)
+
+    salary_ceiling = data.get("salary_ceiling", 200000)
+    if not isinstance(salary_ceiling, (int, float)) or salary_ceiling <= 0:
+        raise ConfigError(
+            f"'salary_ceiling' in 'scoring' must be a positive number, got {salary_ceiling!r}."
+        )
+
+    description_depth_cap = data.get("description_depth_cap", 2000)
+    if not isinstance(description_depth_cap, (int, float)) or description_depth_cap <= 0:
+        raise ConfigError(
+            f"'description_depth_cap' in 'scoring' must be a positive number, got {description_depth_cap!r}."
+        )
+
+    shortlist_size = data.get("shortlist_size", 10)
+    if not isinstance(shortlist_size, int) or shortlist_size <= 0:
+        raise ConfigError(
+            f"'shortlist_size' in 'scoring' must be a positive integer, got {shortlist_size!r}."
+        )
+
+    return ScoringConfig(
+        signals=validated_signals,
+        salary_ceiling=int(salary_ceiling),
+        description_depth_cap=int(description_depth_cap),
+        shortlist_size=shortlist_size,
+    )
+
+
+def validate_output_config(data: Any) -> OutputConfig:
+    """Validate an output configuration block."""
+    if not isinstance(data, dict):
+        raise ConfigError("The 'output' configuration must be a JSON object.")
+
+    allowed_keys = {"formats", "directory"}
+    for key in data:
+        if key not in allowed_keys:
+            raise ConfigError(
+                f"Unknown key in 'output' configuration: '{key}'. Allowed keys: {sorted(allowed_keys)}"
+            )
+
+    formats_raw = data.get("formats", ["markdown"])
+    if not isinstance(formats_raw, list):
+        raise ConfigError("The 'formats' field in 'output' must be a list of format strings.")
+
+    validated_formats: list[str] = []
+    for fmt in formats_raw:
+        if not isinstance(fmt, str):
+            raise ConfigError(f"Output format '{fmt}' must be a string.")
+        fmt_clean = fmt.strip().lower()
+        if fmt_clean == "md":
+            fmt_clean = "markdown"
+        if fmt_clean not in ALLOWED_OUTPUT_FORMATS:
+            raise ConfigError(
+                f"Unknown output format '{fmt}'. Allowed formats: {sorted(ALLOWED_OUTPUT_FORMATS)}"
+            )
+        if fmt_clean not in validated_formats:
+            validated_formats.append(fmt_clean)
+
+    directory = str(data.get("directory", "out")).strip()
+    if not directory:
+        raise ConfigError("The 'directory' field in 'output' cannot be empty.")
+
+    return OutputConfig(
+        formats=validated_formats,
+        directory=directory,
+    )
+
+
 def load_config(path: str | Path) -> Config:
     """Load and validate a Config from a JSON file.
 
@@ -246,7 +387,10 @@ def load_config(path: str | Path) -> Config:
 
     validated_rules = [validate_rule_config(r) for r in raw_rules]
 
-    target_count = int(data.get("target_count", 10))
+    scoring = validate_scoring_config(data["scoring"]) if "scoring" in data else ScoringConfig()
+    output = validate_output_config(data["output"]) if "output" in data else OutputConfig()
+
+    target_count = int(data.get("target_count", scoring.shortlist_size if "scoring" in data else 10))
     max_rounds = int(data.get("max_rounds", 5))
     round_page_size = int(data.get("round_page_size", 10))
     pacing_seconds = float(data.get("pacing_seconds", 0.0))
@@ -261,4 +405,6 @@ def load_config(path: str | Path) -> Config:
         pacing_seconds=pacing_seconds,
         dedupe_by=dedupe_by,
         rules=validated_rules,
+        scoring=scoring,
+        output=output,
     )

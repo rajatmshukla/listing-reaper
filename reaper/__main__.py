@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import NoReturn
 
+import datetime
 from reaper.config import ConfigError, load_config
 from reaper.engine import Reaper
 from reaper.plugins import PluginError, load_plugins, resolve_plugin_entries
@@ -17,11 +18,91 @@ from reaper.report import (
 )
 from reaper.simulator import simulate
 from reaper.sources import FixtureSource
+from reaper.tracker import StateError, Tracker
+from reaper.workflow import run_workflow
 
 
 def _exit_with_error(msg: str, code: int) -> NoReturn:
     sys.stderr.write(f"Error: {msg}\n")
     sys.exit(code)
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    config_file = args.config
+    if not config_file:
+        if Path("examples/workflow.example.json").exists():
+            config_file = "examples/workflow.example.json"
+        elif Path("config.json").exists():
+            config_file = "config.json"
+        else:
+            _exit_with_error("No configuration file specified (pass --config <path>).", 2)
+
+    try:
+        config = load_config(config_file)
+    except (ConfigError, FileNotFoundError) as err:
+        _exit_with_error(str(err), 2)
+    except Exception as err:
+        _exit_with_error(f"Config error: {err}", 2)
+
+    formats = [args.format] if args.format else None
+
+    try:
+        result = run_workflow(
+            fixtures=args.fixtures,
+            config=config,
+            state_path=args.state,
+            out_dir=args.out,
+            formats=formats,
+            target_count=args.target,
+            limit=args.limit,
+            since_days=args.since_days,
+            no_track=args.no_track,
+            dry_run=args.dry_run,
+            explain_scores=args.explain_scores,
+            overwrite=args.overwrite,
+        )
+    except (FileNotFoundError, ValueError) as err:
+        _exit_with_error(str(err), 4)
+    except StateError as err:
+        _exit_with_error(str(err), 2)
+    except Exception as err:
+        _exit_with_error(f"Workflow error: {err}", 2)
+
+    print(result.summary)
+    return 0 if result.shortlist else 3
+
+
+def cmd_track(args: argparse.Namespace) -> int:
+    state_path = Path(args.state)
+    if not state_path.exists():
+        _exit_with_error(f"State file not found: '{args.state}'", 2)
+
+    try:
+        tracker = Tracker.load(state_path)
+    except StateError as err:
+        _exit_with_error(str(err), 2)
+    except Exception as err:
+        _exit_with_error(f"Failed to read state file '{args.state}': {err}", 2)
+
+    today = datetime.date.today().isoformat()
+    try:
+        key, old_status, new_status = tracker.update_by_id(
+            listing_id=args.id,
+            status=args.status,
+            date=today,
+        )
+    except KeyError:
+        _exit_with_error(f"Listing ID '{args.id}' not found in state file '{args.state}'.", 2)
+    except ValueError as err:
+        _exit_with_error(str(err), 2)
+
+    try:
+        tracker.save(state_path)
+    except Exception as err:
+        _exit_with_error(f"Failed to save state file '{args.state}': {err}", 2)
+
+    print(f"Updated listing '{args.id}': status changed from '{old_status}' to '{new_status}' (key: {key}).")
+    return 0
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
@@ -192,6 +273,31 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    # run
+    p_run = subparsers.add_parser("run", help="Run the end-to-end job search workflow.")
+    p_run.add_argument("--fixtures", nargs="+", action="extend", required=True, help="Path(s) to fixture files (.jsonl or .csv).")
+    p_run.add_argument("--config", default=None, help="Path to JSON configuration file (default: examples/workflow.example.json).")
+    p_run.add_argument("--out-dir", "--out", dest="out", default=None, help="Output directory for reports (default: out).")
+    p_run.add_argument("--format", default=None, choices=["md", "markdown", "csv", "json"], help="Output format.")
+    p_run.add_argument("--target", type=int, default=None, help="Target count of shortlisted listings.")
+    p_run.add_argument("--limit", type=int, default=None, help="Cap shortlist size independently of target count.")
+    p_run.add_argument("--since-days", type=int, default=None, help="Filter listings posted within N days.")
+    p_run.add_argument("--seen-file", "--state", dest="state", default="state/seen.json", help="Path to state tracking file (default: state/seen.json).")
+    p_run.add_argument("--no-track", action="store_true", help="Do not record shortlisted listings in state file.")
+    p_run.add_argument("--dry-run", action="store_true", help="Do not write report files or update state file.")
+    p_run.add_argument("--explain-scores", action="store_true", help="Print component breakdown for each kept listing.")
+    p_run.add_argument("--overwrite", action="store_true", help="Overwrite report files even if shortlist is empty.")
+    p_run.add_argument("--plugins", default=None, help="Comma-separated list of plugin modules or .py files to load.")
+
+    # track
+    p_track = subparsers.add_parser("track", help="Update the status of an already-shortlisted listing.")
+    p_track.add_argument("--seen-file", "--state", dest="state", required=True, help="Path to state tracking JSON file.")
+    p_track.add_argument("--id", required=True, help="Listing ID to update.")
+    p_track.add_argument("--status", required=True, choices=["shortlisted", "applied", "skipped", "rejected"], help="New status.")
+    p_track.add_argument("--fixtures", default=None, help="Optional fixture file.")
+    p_track.add_argument("--config", default=None, help="Optional configuration file.")
+    p_track.add_argument("--plugins", default=None, help="Comma-separated list of plugin modules or .py files to load.")
+
     # reap
     p_reap = subparsers.add_parser("reap", help="Reap listings from a fixture file using configured rules.")
     p_reap.add_argument("--fixtures", required=True, help="Path to fixtures file (.jsonl or .csv).")
@@ -243,6 +349,8 @@ def main() -> None:
             _exit_with_error(f"Plugin '{err.entry}' failed to load: {err.message}", 2)
 
     handlers = {
+        "run": cmd_run,
+        "track": cmd_track,
         "reap": cmd_reap,
         "explain": cmd_explain,
         "simulate": cmd_simulate,

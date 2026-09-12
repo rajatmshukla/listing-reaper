@@ -2,6 +2,8 @@
 tmp/
 agy_runs/
 out/
+state/
+*.log
 __pycache__/
 *.py[cod]
 .venv/
