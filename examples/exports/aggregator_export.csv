@@ -1,0 +1,10 @@
+id,job_title,employer_name,job_location,date_posted,apply_url,job_type,salary_text,description
+agg-001,Software Engineer,Acme Digital Labs,"Austin, TX",2026-08-25,https://example.com/jobs/101,full-time,"$110,000",Design and implement robust cloud microservices and scalable REST APIs in Python.
+agg-002,Backend Infrastructure Developer,Pinnacle Core Group,"Remote (United States)",2026-08-26,https://example.com/jobs/102,full-time,"$125,000",Maintain high-availability Kubernetes infrastructure and asynchronous data pipelines.
+agg-003,Cloud Systems Engineer,Nova Dynamics Corp,"Chicago, IL",2026-08-27,https://example.com/jobs/103,full-time,"$115,000",Develop automated deployment pipelines and cloud monitoring systems across distributed environments.
+agg-004,Application Specialist,Cascade Computing Group,"New York, NY",2026-08-28,https://example.com/jobs/104,full-time,"$105,000",Support core web applications and maintain relational database services for internal users.
+agg-005,Senior Lead Architect,Vanguard Computing LLC,"Austin, TX",2026-08-29,https://example.com/jobs/105,full-time,"$160,000",Lead architectural design and engineering strategy for enterprise computing systems.
+agg-006,Systems Analyst,Crestline Robotics Group,"Austin, TX",2026-08-24,https://example.com/jobs/106,full-time,"$95,000",
+agg-007,Platform Developer,Solaria Automation Labs,"Remote in London, UK",2026-08-25,https://example.com/jobs/107,full-time,"$112,000",Build automated testing platforms and continuous integration workflows for engineering teams.
+agg-008,Commission Sales Representative,Echo Valley Software,"Chicago, IL",2026-08-20,https://example.com/jobs/108,commission,"$50,000",Commission only sales position marketing business software to mid-market enterprise clients.
+agg-009,Software Engineer,Acme Digital Labs,"Austin, TX",2026-08-25,https://example.com/jobs/101,full-time,"$110,000",Design and implement robust cloud microservices and scalable REST APIs in Python.

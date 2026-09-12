@@ -8,6 +8,41 @@ class ListingError(Exception):
     """Raised when a listing record is malformed or missing required fields."""
 
 
+VALID_LISTING_FIELDS = {
+    "id",
+    "title",
+    "company",
+    "location",
+    "employment_type",
+    "description",
+    "url",
+    "posted_at",
+    "salary_min",
+    "salary_max",
+    "salary_period",
+    "source",
+}
+
+
+def apply_field_map(
+    record: dict[str, Any], field_map: dict[str, str] | None = None
+) -> dict[str, Any]:
+    """Map foreign record keys onto canonical Listing field names.
+
+    Keys are source field names; values are target Listing field names.
+    A mapped value wins over a same-named source field.
+    Unmapped fields and keys not present in the record are preserved.
+    """
+    if not field_map:
+        return dict(record)
+
+    mapped = dict(record)
+    for src_key, target_field in field_map.items():
+        if src_key in record:
+            mapped[target_field] = record[src_key]
+    return mapped
+
+
 def _coerce_int(val: Any) -> int | None:
     """Coerce numeric values or strings to int, returning None if not parseable."""
     if val is None or isinstance(val, bool):
@@ -54,7 +89,9 @@ class Listing:
         return " ".join(p for p in parts if p).lower()
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> Listing:
+    def from_dict(
+        cls, d: dict[str, Any], field_map: dict[str, str] | None = None
+    ) -> Listing:
         """Construct a Listing from a dictionary.
 
         Tolerates missing keys and coerces numeric strings.
@@ -63,6 +100,9 @@ class Listing:
         """
         if not isinstance(d, dict):
             raise ListingError("Record is not a dictionary")
+
+        if field_map:
+            d = apply_field_map(d, field_map)
 
         raw_id = d.get("id")
         if raw_id is None or not str(raw_id).strip():

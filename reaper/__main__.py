@@ -109,6 +109,10 @@ def cmd_validate(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
         print(f"Valid configuration: '{args.config}'")
+        if config.field_map:
+            print(f"Field map ({len(config.field_map)} mapping(s)):")
+            for src, dst in sorted(config.field_map.items()):
+                print(f"  {src} -> {dst}")
         print(f"Active rules ({len(config.rules)} configured):")
         for idx, rule in enumerate(config.rules, start=1):
             print(f"  {idx}. {rule.rule_id}")
@@ -119,6 +123,26 @@ def cmd_validate(args: argparse.Namespace) -> int:
         _exit_with_error(str(err), 2)
     except Exception as err:
         _exit_with_error(f"Unexpected configuration error: {err}", 2)
+
+
+def cmd_config_describe(args: argparse.Namespace) -> int:
+    config_file = args.config
+    if not config_file:
+        if Path("examples/workflow.example.json").exists():
+            config_file = "examples/workflow.example.json"
+        elif Path("config.json").exists():
+            config_file = "config.json"
+        else:
+            _exit_with_error("No configuration file specified (pass --config <path>).", 2)
+
+    try:
+        config = load_config(config_file)
+        print(config.describe())
+        return 0
+    except (ConfigError, FileNotFoundError) as err:
+        _exit_with_error(str(err), 2)
+    except Exception as err:
+        _exit_with_error(f"Config error: {err}", 2)
 
 
 def cmd_rules(_args: argparse.Namespace) -> int:
@@ -137,7 +161,7 @@ def cmd_reap(args: argparse.Namespace) -> int:
 
     # 2. Load fixture
     try:
-        source = FixtureSource(args.fixtures)
+        source = FixtureSource(args.fixtures, field_map=config.field_map)
     except (FileNotFoundError, ValueError) as err:
         _exit_with_error(str(err), 4)
     except Exception as err:
@@ -184,7 +208,7 @@ def cmd_explain(args: argparse.Namespace) -> int:
 
     # 2. Load fixture
     try:
-        source = FixtureSource(args.fixtures)
+        source = FixtureSource(args.fixtures, field_map=config.field_map)
     except (FileNotFoundError, ValueError) as err:
         _exit_with_error(str(err), 4)
     except Exception as err:
@@ -230,7 +254,7 @@ def cmd_simulate(args: argparse.Namespace) -> int:
 
     # 2. Load fixture
     try:
-        source = FixtureSource(args.fixtures, seed=args.seed)
+        source = FixtureSource(args.fixtures, seed=args.seed, field_map=config.field_map)
     except (FileNotFoundError, ValueError) as err:
         _exit_with_error(str(err), 4)
     except Exception as err:
@@ -334,6 +358,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_val.add_argument("--config", required=True, help="Path to JSON configuration file.")
     p_val.add_argument("--plugins", default=None, help="Comma-separated list of plugin modules or .py files to load.")
 
+    # config-describe
+    p_desc = subparsers.add_parser("config-describe", help="Display configuration description and field mapping.")
+    p_desc.add_argument("--config", default=None, help="Path to JSON configuration file.")
+    p_desc.add_argument("--plugins", default=None, help="Comma-separated list of plugin modules or .py files to load.")
+
     return parser
 
 
@@ -356,6 +385,7 @@ def main() -> None:
         "simulate": cmd_simulate,
         "rules": cmd_rules,
         "validate": cmd_validate,
+        "config-describe": cmd_config_describe,
     }
 
     handler = handlers.get(args.command)

@@ -66,7 +66,7 @@ def run_workflow(
     source_errors: list[tuple[str, int, str]] = []
 
     for f_path in fixtures:
-        src = FixtureSource(f_path)
+        src = FixtureSource(f_path, field_map=config.field_map)
         if src.errors:
             source_errors.extend(src.errors)
         all_listings.extend(src.listings)

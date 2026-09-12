@@ -26,12 +26,18 @@ class FixtureSource:
     and never silently skipped.
     """
 
-    def __init__(self, path: str | Path, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        path: str | Path,
+        seed: int | None = None,
+        field_map: dict[str, str] | None = None,
+    ) -> None:
         self.path = Path(path)
         self.name = self.path.name
         self.errors: list[tuple[str, int, str]] = []
         self.listings: list[Listing] = []
         self._seed = seed
+        self.field_map = dict(field_map) if field_map else None
 
         self._load()
 
@@ -69,7 +75,7 @@ class FixtureSource:
                             (str(self.path), line_no, "Line is not a valid JSON object.")
                         )
                         continue
-                    listing = Listing.from_dict(data)
+                    listing = Listing.from_dict(data, field_map=self.field_map)
                     self.listings.append(listing)
                 except json.JSONDecodeError as err:
                     self.errors.append(
@@ -89,7 +95,7 @@ class FixtureSource:
             reader = csv.DictReader(f)
             for row_no, row in enumerate(reader, start=2):  # 1 is header
                 try:
-                    listing = Listing.from_dict(row)
+                    listing = Listing.from_dict(row, field_map=self.field_map)
                     self.listings.append(listing)
                 except ListingError as err:
                     self.errors.append(

@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "target_count": 4,
+  "max_rounds": 5,
+  "round_page_size": 10,
+  "pacing_seconds": 0.0,
+  "dedupe_by": [
+    "title",
+    "company"
+  ],
+  "field_map": {
+    "job_title": "title",
+    "employer_name": "company",
+    "job_location": "location",
+    "date_posted": "posted_at",
+    "apply_url": "url",
+    "job_type": "employment_type"
+  },
+  "scoring": {
+    "signals": {
+      "title_match": 3.0,
+      "salary": 2.0,
+      "freshness": 1.5,
+      "description_depth": 1.0,
+      "location_fit": 1.0,
+      "penalty_overlong_title": -1.0
+    },
+    "salary_ceiling": 200000,
+    "description_depth_cap": 2000,
+    "shortlist_size": 10
+  },
+  "output": {
+    "formats": [
+      "markdown",
+      "csv",
+      "json"
+    ],
+    "directory": "out"
+  },
+  "rules": [
+    {
+      "rule_id": "require_description",
+      "min_chars": 40
+    },
+    {
+      "rule_id": "require_title_patterns",
+      "patterns": [
+        "(?i)engineer",
+        "(?i)developer",
+        "(?i)specialist",
+        "(?i)analyst",
+        "(?i)architect"
+      ]
+    },
+    {
+      "rule_id": "exclude_seniority",
+      "terms": [
+        "senior",
+        "principal",
+        "lead",
+        "staff",
+        "head of"
+      ]
+    },
+    {
+      "rule_id": "employment_type",
+      "allowed": [
+        "full-time"
+      ],
+      "reject_ambiguous": true
+    },
+    {
+      "rule_id": "location_policy",
+      "allowed_locations": [
+        "Austin, TX",
+        "New York, NY",
+        "Chicago, IL"
+      ],
+      "allow_remote": true,
+      "remote_scopes": [
+        "united states",
+        "worldwide"
+      ],
+      "reject_remote_other_scope": true
+    },
+    {
+      "rule_id": "freshness",
+      "max_age_days": 30,
+      "reference_date": "2026-09-01",
+      "missing_date_policy": "reap"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "target_count": 4,
+  "max_rounds": 5,
+  "round_page_size": 10,
+  "pacing_seconds": 0.0,
+  "dedupe_by": [
+    "title",
+    "company"
+  ],
+  "field_map": {
+    "position": "title",
+    "candidate_required_location": "location",
+    "publication_date": "posted_at"
+  },
+  "scoring": {
+    "signals": {
+      "title_match": 3.0,
+      "freshness": 1.5,
+      "description_depth": 1.0,
+      "location_fit": 1.0
+    },
+    "shortlist_size": 10
+  },
+  "output": {
+    "formats": [
+      "markdown",
+      "csv",
+      "json"
+    ],
+    "directory": "out"
+  },
+  "rules": [
+    {
+      "rule_id": "require_description",
+      "min_chars": 40
+    },
+    {
+      "rule_id": "require_title_patterns",
+      "patterns": [
+        "(?i)engineer",
+        "(?i)developer",
+        "(?i)specialist",
+        "(?i)analyst",
+        "(?i)strategist"
+      ]
+    },
+    {
+      "rule_id": "exclude_seniority",
+      "terms": [
+        "senior",
+        "principal",
+        "lead",
+        "staff",
+        "head of"
+      ]
+    },
+    {
+      "rule_id": "employment_type",
+      "allowed": [
+        "full-time"
+      ]
+    },
+    {
+      "rule_id": "location_policy",
+      "allow_remote": true
+    },
+    {
+      "rule_id": "freshness",
+      "max_age_days": 30,
+      "reference_date": "2026-09-01",
+      "missing_date_policy": "reap"
+    }
+  ]
+}

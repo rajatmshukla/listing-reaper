@@ -6,7 +6,7 @@
 
 A real job search runs as an ongoing loop:
 
-1. **Gather**: Collect listings from data you already have (a board export, a CSV download, or a local scrape).
+1. **Gather**: Collect listings from data you already have (a board export, a CSV download, or a local scrape). See [docs/SOURCES.md](docs/SOURCES.md) for platform export formats and field mapping.
 2. **Reap**: Filter out ineligible postings with an explainable audit trail that logs a concrete written reason for every eliminated vacancy.
 3. **Dedupe**: Eliminate duplicate postings and drop anything you have already reviewed or acted on, ensuring nothing is offered twice.
 4. **Rank**: Score surviving opportunities using weighted match signals so the best fits surface at the top with a full score breakdown.
@@ -190,6 +190,12 @@ class CustomArchiveSource:
             yield batch
 ```
 
+## Where Your Listings Come From
+
+`listing-reaper` operates strictly offline and never connects to external networks or scrapes web pages. It expects you to provide data files you already have, whether downloaded directly from platforms, retrieved through applicant tracking feeds, or exported from personal archives.
+
+The platform guide in [docs/SOURCES.md](docs/SOURCES.md) details export structures, typical fields, data-quality caveats, and ready-to-paste `field_map` configurations for 22 platforms across large aggregators (Indeed, LinkedIn, Google Jobs, ZipRecruiter, Talent.com, Glassdoor, Monster, SimplyHired, Dice), hourly platforms (Snagajob), remote-first boards (Remotive, Himalayas, Jobicy, Arbeitnow, RemoteOK), applicant tracking systems (Greenhouse, Lever, Ashby, Workable), startup/internship portals (Wellfound, Internshala), and public sector boards (USAJOBS). Sample exports demonstrating various foreign schemas are available in `examples/exports/`.
+
 ## Reading the Report
 
 Every live workflow run writes reports into `--out` (default: `out/`):
@@ -369,6 +375,13 @@ Configurations are stored in standard JSON files. Typos and unrecognized keys ar
   "round_page_size": 10,
   "pacing_seconds": 0.0,
   "dedupe_by": ["title", "company"],
+  "field_map": {
+    "job_title": "title",
+    "employer_name": "company",
+    "job_location": "location",
+    "date_posted": "posted_at",
+    "apply_url": "url"
+  },
   "scoring": {
     "signals": {
       "title_match": 3.0,
@@ -395,7 +408,31 @@ Configurations are stored in standard JSON files. Typos and unrecognized keys ar
 }
 ```
 
-See `examples/workflow.example.json` for a complete configuration.
+### Top-Level Configuration Schema
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `version` | `int` or `str` | `1` | Configuration schema version. |
+| `target_count` | `int` | `10` | Desired shortlist count for a run. |
+| `max_rounds` | `int` | `5` | Maximum simulation rounds. |
+| `round_page_size` | `int` | `10` | Number of listings per round page. |
+| `pacing_seconds` | `float` | `0.0` | Pacing delay in seconds between rounds. |
+| `dedupe_by` | `list[str]` | `["title", "company"]` | Listing fields used for deduplication. |
+| `field_map` | `dict[str, str]` | `{}` | Optional mapping of source column names to canonical Listing fields. |
+| `scoring` | `object` | `{}` | Weighted signal scoring configuration. |
+| `output` | `object` | `{}` | Report generation output settings (`formats`, `directory`). |
+| `rules` | `list[object]` | `[]` | Ordered filter rule definitions evaluated as sequential gates. |
+
+### Foreign Export Field Mapping (`field_map`)
+
+The optional `field_map` block allows you to ingest files whose column names differ from the canonical `Listing` model without editing the file:
+- **Keys**: Foreign source field names as they appear in your CSV header or JSONL objects.
+- **Values**: Canonical `Listing` field names (`id`, `title`, `company`, `location`, `employment_type`, `description`, `url`, `posted_at`, `salary_min`, `salary_max`, `salary_period`, `source`).
+- **Timing**: Applied during ingest, before validation and rule execution.
+- **Precedence**: A mapped value wins over a same-named source field. If a source record lacks both the mapped key and canonical name, it behaves as a missing field.
+- **Validation**: Any target value not in the list of valid `Listing` fields fails configuration validation with exit code `2`.
+
+See `examples/workflow.example.json` and `examples/workflow.aggregator.example.json` for complete configurations.
 
 ## Rule Reference
 

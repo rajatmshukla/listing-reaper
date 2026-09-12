@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from reaper.model import VALID_LISTING_FIELDS
 from reaper.rules import REGISTRY, RuleSpec
 
 
@@ -21,6 +22,7 @@ ALLOWED_TOP_LEVEL_KEYS = {
     "round_page_size",
     "pacing_seconds",
     "dedupe_by",
+    "field_map",
     "rules",
     "scoring",
     "output",
@@ -99,6 +101,7 @@ class Config:
     round_page_size: int = 10
     pacing_seconds: float = 0.0
     dedupe_by: list[str] = field(default_factory=lambda: ["title", "company"])
+    field_map: dict[str, str] = field(default_factory=dict)
     rules: list[ConfiguredRule] = field(default_factory=list)
     scoring: ScoringConfig = field(default_factory=ScoringConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
@@ -112,8 +115,12 @@ class Config:
             f"  Round page size:  {self.round_page_size}",
             f"  Pacing seconds:   {self.pacing_seconds}",
             f"  Dedupe by:        {self.dedupe_by}",
-            f"Active Rules ({len(self.rules)} configured):",
         ]
+        if self.field_map:
+            lines.append(f"  Field map ({len(self.field_map)} mapping(s)):")
+            for src, dst in sorted(self.field_map.items()):
+                lines.append(f"    {src} -> {dst}")
+        lines.append(f"Active Rules ({len(self.rules)} configured):")
         for idx, rule in enumerate(self.rules, start=1):
             spec = REGISTRY.get(rule.rule_id)
             summary = f" — {spec.summary}" if spec else ""
@@ -348,6 +355,27 @@ def validate_output_config(data: Any) -> OutputConfig:
     )
 
 
+def validate_field_map(data: Any) -> dict[str, str]:
+    """Validate the field_map configuration block."""
+    if not isinstance(data, dict):
+        raise ConfigError("The 'field_map' configuration must be a JSON object.")
+
+    validated: dict[str, str] = {}
+    for key, val in data.items():
+        if not isinstance(val, str):
+            raise ConfigError(
+                f"Field map target for '{key}' must be a string, got {val!r}."
+            )
+        if val not in VALID_LISTING_FIELDS:
+            valid_targets = sorted(VALID_LISTING_FIELDS)
+            raise ConfigError(
+                f"Unknown target field '{val}' in 'field_map'. Valid listing fields are: {valid_targets}"
+            )
+        validated[str(key)] = val
+
+    return validated
+
+
 def load_config(path: str | Path) -> Config:
     """Load and validate a Config from a JSON file.
 
@@ -387,6 +415,7 @@ def load_config(path: str | Path) -> Config:
 
     validated_rules = [validate_rule_config(r) for r in raw_rules]
 
+    field_map = validate_field_map(data["field_map"]) if "field_map" in data else {}
     scoring = validate_scoring_config(data["scoring"]) if "scoring" in data else ScoringConfig()
     output = validate_output_config(data["output"]) if "output" in data else OutputConfig()
 
@@ -404,6 +433,7 @@ def load_config(path: str | Path) -> Config:
         round_page_size=round_page_size,
         pacing_seconds=pacing_seconds,
         dedupe_by=dedupe_by,
+        field_map=field_map,
         rules=validated_rules,
         scoring=scoring,
         output=output,

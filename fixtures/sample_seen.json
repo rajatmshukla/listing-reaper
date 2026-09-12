@@ -7,88 +7,10 @@
       "last_seen": "2026-08-25",
       "status": "applied"
     },
-    "backend software engineer::helios software works": {
-      "listing_id": "job-026",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "cloud systems engineer::meridian peak analytics": {
-      "listing_id": "job-025",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "data engineer::quantix digital systems": {
-      "listing_id": "job-028",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "data platform developer::aura automation inc": {
-      "listing_id": "job-011",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "full stack application engineer and cloud infrastructure specialist::cascade computing group": {
-      "listing_id": "job-012",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "infrastructure engineer::pinnacle dataworks": {
-      "listing_id": "job-008",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "infrastructure specialist::solaria automation labs": {
-      "listing_id": "job-027",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "platform specialist::crestline robotics group": {
-      "listing_id": "job-031",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "reliability engineer::northstar network systems": {
-      "listing_id": "job-029",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
     "site reliability analyst::zephyr logistics inc": {
       "listing_id": "job-007",
       "first_seen": "2026-08-28",
       "last_seen": "2026-08-28",
-      "status": "shortlisted"
-    },
-    "software applications developer::blue harbor technologies": {
-      "listing_id": "job-030",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "software engineer::acme widgets ltd": {
-      "listing_id": "job-001",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "systems software engineer::vanguard computing llc": {
-      "listing_id": "job-032",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
-      "status": "shortlisted"
-    },
-    "systems specialist::apex orbital systems": {
-      "listing_id": "job-005",
-      "first_seen": "2026-09-12",
-      "last_seen": "2026-09-12",
       "status": "shortlisted"
     }
   }
