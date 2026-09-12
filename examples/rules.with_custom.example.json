@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "target_count": 5,
+  "max_rounds": 3,
+  "round_page_size": 10,
+  "pacing_seconds": 0.0,
+  "dedupe_by": [
+    "title",
+    "company"
+  ],
+  "rules": [
+    {
+      "rule_id": "require_description",
+      "min_chars": 40
+    },
+    {
+      "rule_id": "max_title_length",
+      "max_chars": 60
+    },
+    {
+      "rule_id": "exclude_seniority",
+      "terms": [
+        "senior",
+        "sr.",
+        "lead",
+        "principal",
+        "staff",
+        "head of"
+      ]
+    },
+    {
+      "rule_id": "exclude_title_patterns",
+      "patterns": [
+        "(?i)intern(ship)?",
+        "(?i)director"
+      ]
+    },
+    {
+      "rule_id": "blocked_keywords",
+      "patterns": [
+        "(?i)commission only",
+        "(?i)training fee",
+        "(?i)upfront investment"
+      ]
+    },
+    {
+      "rule_id": "employment_type",
+      "allowed": [
+        "full-time"
+      ],
+      "reject_ambiguous": true
+    },
+    {
+      "rule_id": "location_policy",
+      "allowed_locations": [
+        "Austin, TX",
+        "New York, NY",
+        "Chicago, IL"
+      ],
+      "allow_remote": true,
+      "remote_scopes": [
+        "united states",
+        "worldwide"
+      ],
+      "reject_remote_other_scope": true
+    },
+    {
+      "rule_id": "freshness",
+      "max_age_days": 60,
+      "reference_date": "2026-09-01",
+      "missing_date_policy": "reap"
+    },
+    {
+      "rule_id": "min_salary",
+      "min_annual": 75000,
+      "missing_salary_policy": "keep"
+    }
+  ]
+}

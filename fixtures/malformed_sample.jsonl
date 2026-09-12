@@ -1,0 +1,4 @@
+{"id": "job-ok-1", "title": "Embedded Developer", "company": "Vortex Instruments", "location": "Austin, TX", "employment_type": "full-time", "description": "Write embedded C firmware and test device interfaces for telemetry instruments.", "posted_at": "2026-08-15"}
+{"id": "job-bad-json", "title": "Malformed Line 2
+{"id": "job-bad-schema", "title": "Missing Company Field", "location": "Austin, TX"}
+{"id": "job-ok-2", "title": "Infrastructure Specialist", "company": "Pinnacle Dataworks", "location": "Remote (Worldwide)", "employment_type": "full-time", "description": "Monitor and automate distributed cloud infrastructure nodes and network bridges.", "posted_at": "2026-08-16"}
