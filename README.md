@@ -720,4 +720,4 @@ OK
 
 ## License
 
-No license has been chosen yet; all rights are reserved.
+MIT. See [LICENSE](LICENSE).
