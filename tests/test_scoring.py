@@ -1,3 +1,4 @@
+"""Tests for candidate ranking signals, scoring configuration, and deterministic tie-breaking."""
 from __future__ import annotations
 
 import datetime

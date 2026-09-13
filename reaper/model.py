@@ -1,3 +1,11 @@
+"""Data models and record structures for listing-reaper.
+
+Owns the canonical Listing representation, Verdict, RuleTrace, ReapReport, and field mapping.
+Does not own rule evaluation algorithms, persistent state storage, or output formatting.
+Called by ingestion sources, the filter engine, scorer, and report generators.
+Public exports: Listing, ListingError, ReapReport, RuleTrace, VALID_LISTING_FIELDS,
+Verdict, and apply_field_map.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

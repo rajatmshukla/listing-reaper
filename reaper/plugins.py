@@ -1,3 +1,10 @@
+"""Dynamic plugin discovery and loading mechanisms for listing-reaper.
+
+Owns loading filter rule extensions from file paths or dotted module paths, with rollback on failure.
+Does not own rule specification schemas, parameter validation, or CLI execution.
+Called by CLI entry points or scripts when custom filter plugins are configured.
+Public exports: PluginError, load_plugins, and resolve_plugin_entries.
+"""
 from __future__ import annotations
 
 import importlib
@@ -13,6 +20,7 @@ class PluginError(Exception):
     """Raised when a plugin module cannot be imported or raises during import."""
 
     def __init__(self, entry: str, message: str) -> None:
+        """Initialize PluginError with the offending entry name and error message."""
         super().__init__(f"Plugin '{entry}' failed to load: {message}")
         self.entry = entry
         self.message = message
@@ -27,6 +35,7 @@ def resolve_plugin_entries(cli_plugins: str | None = None) -> list[str]:
     entries: list[str] = []
 
     def _append_from_str(val: str) -> None:
+        """Split comma-separated entries and append unique non-empty items."""
         for part in val.split(","):
             cleaned = part.strip()
             if cleaned and cleaned not in entries:

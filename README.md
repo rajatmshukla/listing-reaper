@@ -663,6 +663,12 @@ test_honesty_checks (tests.test_engine.TestEngine.test_honesty_checks) ... ok
 test_honesty_violation_detection (tests.test_engine.TestEngine.test_honesty_violation_detection) ... ok
 test_kept_listing_complete_trace (tests.test_engine.TestEngine.test_kept_listing_complete_trace) ... ok
 test_short_circuit_and_gate_model (tests.test_engine.TestEngine.test_short_circuit_and_gate_model) ... ok
+test_config_with_no_field_map_still_working (tests.test_field_map.TestFieldMap.test_config_with_no_field_map_still_working) ... ok
+test_end_to_end_aggregator_export_to_non_empty_shortlist (tests.test_field_map.TestFieldMap.test_end_to_end_aggregator_export_to_non_empty_shortlist) ... ok
+test_field_map_on_csv_and_jsonl (tests.test_field_map.TestFieldMap.test_field_map_on_csv_and_jsonl) ... ok
+test_field_map_renaming_every_listable_field (tests.test_field_map.TestFieldMap.test_field_map_renaming_every_listable_field) ... ok
+test_invalid_target_field_erroring_with_exit_2 (tests.test_field_map.TestFieldMap.test_invalid_target_field_erroring_with_exit_2) ... ok
+test_mapped_key_colliding_with_real_field_name (tests.test_field_map.TestFieldMap.test_mapped_key_colliding_with_real_field_name) ... ok
 test_load_plugin_from_file (tests.test_plugins.TestPlugins.test_load_plugin_from_file) ... ok
 test_load_plugin_nonexistent_fails_and_rolls_back (tests.test_plugins.TestPlugins.test_load_plugin_nonexistent_fails_and_rolls_back) ... ok
 test_resolve_plugin_entries (tests.test_plugins.TestPlugins.test_resolve_plugin_entries) ... ok
@@ -705,7 +711,7 @@ test_reconciliation_counts_and_multi_fixture_dedupe (tests.test_workflow.TestWor
 test_since_days_filter (tests.test_workflow.TestWorkflow.test_since_days_filter) ... ok
 
 ----------------------------------------------------------------------
-Ran 51 tests in 0.231s
+Ran 57 tests in 0.240s
 
 OK
 ```

@@ -1,3 +1,4 @@
+"""Tests for offline simulation rounds, deduplication, paging stops, and shortfall honesty."""
 from __future__ import annotations
 
 import tempfile

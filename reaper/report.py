@@ -1,3 +1,11 @@
+"""Terminal output formatting and report rendering for listing-reaper.
+
+Owns formatting of human-readable reap summaries, rule explanations, simulation outputs, and JSON dumps.
+Does not own file persistence, candidate scoring, or sequential rule gating.
+Called by CLI commands to render console output and serialize result structures.
+Public exports: render_explain, render_json, render_reap_summary, render_rules_catalog,
+and render_simulation.
+"""
 from __future__ import annotations
 
 import json

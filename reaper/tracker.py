@@ -1,3 +1,10 @@
+"""Persistent state tracking and application lifecycle management for listing-reaper.
+
+Owns tracking of previously seen vacancies, status lifecycle transitions, and atomic file storage.
+Does not own listing ingestion, filter rule definitions, scoring weights, or report rendering.
+Called by the workflow pipeline to check seen vacancies and by the track CLI command.
+Public exports: StateError, TrackedRecord, Tracker, and VALID_STATUSES.
+"""
 from __future__ import annotations
 
 import json
@@ -24,6 +31,7 @@ class TrackedRecord:
     status: str
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert TrackedRecord to a JSON-serializable dictionary."""
         return {
             "listing_id": self.listing_id,
             "first_seen": self.first_seen,
@@ -43,6 +51,7 @@ class Tracker:
         records: dict[str, TrackedRecord] | None = None,
         version: int = 1,
     ) -> None:
+        """Initialize Tracker with state schema version and mapping of seen keys."""
         self.records: dict[str, TrackedRecord] = dict(records or {})
         self.version = version
 

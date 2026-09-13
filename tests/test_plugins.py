@@ -1,3 +1,4 @@
+"""Tests for plugin entry resolution, dynamic loading, and registry rollback."""
 from __future__ import annotations
 
 import os

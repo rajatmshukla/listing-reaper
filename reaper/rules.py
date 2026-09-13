@@ -1,3 +1,10 @@
+"""Filter rule specifications, registry, and built-in evaluation functions.
+
+Owns rule parameter schema definitions, the global rule registry, and evaluation logic
+for all built-in filter rules. Does not own pipeline gate traversal, configuration
+file parsing, or report generation. Called by the engine and simulation runner during
+listing evaluation. Public exports: ParamSpec, RuleSpec, REGISTRY, and register_rule.
+"""
 from __future__ import annotations
 
 import datetime
@@ -17,6 +24,7 @@ class ParamSpec:
     required: bool = False
 
     def __getitem__(self, key: str) -> Any:
+        """Retrieve a parameter specification field by attribute name."""
         if key == "description":
             return self.description
         if key == "default":
@@ -26,6 +34,7 @@ class ParamSpec:
         raise KeyError(key)
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Retrieve a parameter specification field with an optional default."""
         try:
             return self[key]
         except KeyError:
@@ -60,6 +69,7 @@ def _eval_require_description(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing description meets the minimum character length."""
     min_chars = int(params.get("min_chars", 40))
     char_count = len(listing.description.strip())
     if char_count < min_chars:
@@ -82,6 +92,7 @@ def _eval_exclude_title_patterns(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing title matches any excluded regex pattern."""
     patterns = params.get("patterns") or []
     for pattern in patterns:
         if re.search(pattern, listing.title, re.IGNORECASE):
@@ -104,6 +115,7 @@ def _eval_require_title_patterns(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing title matches at least one required regex pattern."""
     patterns = params.get("patterns") or []
     for pattern in patterns:
         if re.search(pattern, listing.title, re.IGNORECASE):
@@ -126,6 +138,7 @@ def _eval_exclude_seniority(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing title contains any excluded seniority terms."""
     terms = params.get("terms")
     if terms is None:
         terms = ["senior", "sr.", "lead", "principal", "staff", "head of"]
@@ -156,6 +169,7 @@ def _eval_employment_type(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing employment type is allowed and check description ambiguity."""
     allowed = params.get("allowed") or []
     reject_ambiguous = params.get("reject_ambiguous", True)
 
@@ -226,6 +240,7 @@ def _eval_location_policy(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing location satisfies allowed locations and remote policy."""
     allowed_locations = params.get("allowed_locations") or []
     allow_remote = bool(params.get("allow_remote", False))
     remote_scopes = params.get("remote_scopes") or []
@@ -316,6 +331,7 @@ def _eval_freshness(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing age relative to reference date is within max_age_days."""
     max_age_days = int(params.get("max_age_days", 30))
     missing_date_policy = str(params.get("missing_date_policy", "reap")).lower()
     ref_date_param = params.get("reference_date")
@@ -392,6 +408,7 @@ def _eval_blocked_keywords(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing title or description contains any blocked regex patterns."""
     patterns = params.get("patterns") or []
     for pattern in patterns:
         m = re.search(pattern, listing.text, re.IGNORECASE)
@@ -416,6 +433,7 @@ def _eval_min_salary(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate whether listing annual compensation meets or exceeds min_annual."""
     min_annual = int(params["min_annual"])
     missing_salary_policy = str(params.get("missing_salary_policy", "keep")).lower()
     hours_per_year = int(params.get("hours_per_year", 2080))
@@ -472,6 +490,7 @@ def _eval_custom_patterns(
     params: dict[str, Any],
     ctx: dict[str, Any] | None = None,
 ) -> Verdict:
+    """Evaluate custom regex inclusion and exclusion patterns against listing text."""
     reap_if_match = params.get("reap_if_match") or []
     reap_unless_match = params.get("reap_unless_match") or []
 

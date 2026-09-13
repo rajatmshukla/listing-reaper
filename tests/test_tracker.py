@@ -1,3 +1,4 @@
+"""Tests for persistent state tracking, record transitions, and atomic file storage."""
 from __future__ import annotations
 
 import json

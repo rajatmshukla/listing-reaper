@@ -1,3 +1,11 @@
+"""End-to-end job search workflow orchestration for listing-reaper.
+
+Owns the execution pipeline coordinating ingestion, deduplication, reaping, state filtering,
+candidate scoring, shortlist generation, report export, and tracking updates. Does not own
+individual rule evaluation algorithms, CLI parsing, or low-level file format readers.
+Called by the run CLI subcommand or external automation scripts.
+Public exports: WorkflowResult and run_workflow.
+"""
 from __future__ import annotations
 
 import datetime

@@ -1,3 +1,12 @@
+"""Configuration schema validation, parsing, and data models for listing-reaper.
+
+Owns configuration loading, schema validation, semantic parameter validation, and
+runtime config representations. Does not own rule execution, file parsing, or CLI
+handling. Called by CLI handlers, workflow runners, or external scripts. Public
+exports: ALLOWED_OUTPUT_FORMATS, Config, ConfigError, ConfiguredRule, OutputConfig,
+ScoringConfig, load_config, render_regex_error, validate_field_map, validate_output_config,
+validate_rule_config, and validate_scoring_config.
+"""
 from __future__ import annotations
 
 import datetime
@@ -53,6 +62,7 @@ class ConfiguredRule:
     params: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert ConfiguredRule to a JSON-serializable dictionary."""
         return {
             "rule_id": self.rule_id,
             "params": self.params,
@@ -69,6 +79,7 @@ class ScoringConfig:
     shortlist_size: int = 10
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert ScoringConfig to a JSON-serializable dictionary."""
         return {
             "signals": dict(self.signals),
             "salary_ceiling": self.salary_ceiling,
@@ -85,6 +96,7 @@ class OutputConfig:
     directory: str = "out"
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert OutputConfig to a JSON-serializable dictionary."""
         return {
             "formats": list(self.formats),
             "directory": self.directory,

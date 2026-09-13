@@ -1,3 +1,10 @@
+"""Candidate ranking, signal calculation, and deterministic tie-breaking for listing-reaper.
+
+Owns weighted match signal evaluation, score computation, and tie-breaking order.
+Does not own rule gate evaluation, file persistence, or report template formatting.
+Called by the workflow runner to sort surviving listings into prioritized shortlists.
+Public exports: ScoredListing and Scorer.
+"""
 from __future__ import annotations
 
 import datetime
@@ -18,6 +25,7 @@ class ScoredListing:
     components: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert ScoredListing to a JSON-serializable dictionary."""
         return {
             "listing": self.listing.to_dict(),
             "score": self.score,
@@ -34,6 +42,7 @@ class _RankingKey:
     listing_id: str
 
     def __lt__(self, other: _RankingKey) -> bool:
+        """Compare ranking keys with score desc, posted_at desc, and id asc."""
         if self.score != other.score:
             return self.score > other.score
         if self.posted_at != other.posted_at:
@@ -56,6 +65,7 @@ class Scorer:
     """
 
     def __init__(self, config: Config) -> None:
+        """Initialize Scorer with signal weights and thresholds from config."""
         self.config = config
         self.signals = dict(config.scoring.signals)
         self.salary_ceiling = float(config.scoring.salary_ceiling)

@@ -1,3 +1,10 @@
+"""Sequential rule evaluation engine and honesty validation for listing-reaper.
+
+Owns the filter pipeline execution, short-circuit gate traversal, and honesty invariant checks.
+Does not own configuration loading, file ingestion, candidate scoring, or report rendering.
+Called by the workflow runner and CLI commands to evaluate listings against active rules.
+Public exports: Reaper.
+"""
 from __future__ import annotations
 
 from typing import Iterable
@@ -15,6 +22,7 @@ class Reaper:
     """
 
     def __init__(self, config: Config) -> None:
+        """Initialize the Reaper filter engine with a validated Config."""
         self.config = config
 
     def reap(self, listing: Listing) -> tuple[Verdict, list[RuleTrace]]:

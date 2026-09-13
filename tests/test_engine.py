@@ -1,3 +1,4 @@
+"""Tests for the filter engine gate model, short-circuit execution, and honesty checks."""
 from __future__ import annotations
 
 import unittest

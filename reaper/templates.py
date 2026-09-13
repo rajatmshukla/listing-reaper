@@ -1,3 +1,11 @@
+"""Report file templates and output generators for listing-reaper.
+
+Owns formatting of shortlist artifacts in Markdown, CSV, and JSON formats, plus terminal run summaries.
+Does not own workflow scheduling, rule filtering, score computation, or disk I/O.
+Called by the workflow execution module to render report contents for disk export.
+Public exports: format_salary, render_csv_report, render_json_report, render_markdown_report,
+and render_workflow_summary.
+"""
 from __future__ import annotations
 
 import csv

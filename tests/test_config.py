@@ -1,3 +1,4 @@
+"""Tests for configuration file loading, schema validation, and parameter checks."""
 from __future__ import annotations
 
 import json

@@ -1,3 +1,10 @@
+"""Offline job search simulation harness and paging metrics for listing-reaper.
+
+Owns multi-round offline hunt simulation, batch paging, and deduplication accounting.
+Does not own live workflow execution, persistent state tracking, or CLI parsing.
+Called by the simulate CLI command or test suites to benchmark filtering rules.
+Public exports: RoundTrace, SimulationResult, make_dedupe_key, and simulate.
+"""
 from __future__ import annotations
 
 import time
@@ -37,6 +44,7 @@ class RoundTrace:
     note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert RoundTrace to a JSON-serializable dictionary."""
         return {
             "round_index": self.round_index,
             "fetched": self.fetched,
@@ -66,6 +74,7 @@ class SimulationResult:
     seen_keys: set[str] = field(default_factory=set)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert SimulationResult to a JSON-serializable dictionary."""
         return {
             "rounds_run": self.rounds_run,
             "target_count": self.target_count,

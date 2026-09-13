@@ -1,3 +1,10 @@
+"""Command-line interface and entry point for listing-reaper.
+
+Owns CLI argument parsing, subcommand routing, terminal output dispatch, and process exit codes.
+Does not own filtering algorithms, simulation logic, scoring math, or persistence rules.
+Called from the shell via python -m reaper or by invoking main(). Public entry points
+exported: main and build_parser.
+"""
 from __future__ import annotations
 
 import argparse
@@ -23,11 +30,13 @@ from reaper.workflow import run_workflow
 
 
 def _exit_with_error(msg: str, code: int) -> NoReturn:
+    """Print error message to stderr and terminate process with exit code."""
     sys.stderr.write(f"Error: {msg}\n")
     sys.exit(code)
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    """Execute the end-to-end job search workflow command."""
     config_file = args.config
     if not config_file:
         if Path("examples/workflow.example.json").exists():
@@ -73,6 +82,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def cmd_track(args: argparse.Namespace) -> int:
+    """Update the tracking status of an existing listing in the state file."""
     state_path = Path(args.state)
     if not state_path.exists():
         _exit_with_error(f"State file not found: '{args.state}'", 2)
@@ -106,6 +116,7 @@ def cmd_track(args: argparse.Namespace) -> int:
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
+    """Validate a JSON configuration file and report active rules and field mappings."""
     try:
         config = load_config(args.config)
         print(f"Valid configuration: '{args.config}'")
@@ -126,6 +137,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_config_describe(args: argparse.Namespace) -> int:
+    """Print a human-readable description of configuration settings and field mappings."""
     config_file = args.config
     if not config_file:
         if Path("examples/workflow.example.json").exists():
@@ -146,11 +158,13 @@ def cmd_config_describe(args: argparse.Namespace) -> int:
 
 
 def cmd_rules(_args: argparse.Namespace) -> int:
+    """Print the catalog of registered filter rules and their parameters."""
     print(render_rules_catalog())
     return 0
 
 
 def cmd_reap(args: argparse.Namespace) -> int:
+    """Filter fixture listings through configured rules and output reap summaries."""
     # 1. Load config
     try:
         config = load_config(args.config)
@@ -198,6 +212,7 @@ def cmd_reap(args: argparse.Namespace) -> int:
 
 
 def cmd_explain(args: argparse.Namespace) -> int:
+    """Evaluate and print a step-by-step rule trace for a specific listing ID."""
     # 1. Load config
     try:
         config = load_config(args.config)
@@ -234,6 +249,7 @@ def cmd_explain(args: argparse.Namespace) -> int:
 
 
 def cmd_simulate(args: argparse.Namespace) -> int:
+    """Simulate an offline hunt across paginated fixture listings."""
     # 1. Load config
     try:
         config = load_config(args.config)
@@ -291,6 +307,7 @@ def cmd_simulate(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Construct and return the top-level argument parser with all subcommands."""
     parser = argparse.ArgumentParser(
         prog="reaper",
         description="Offline job listing filter engine with explainable kill log and simulation harness.",
@@ -367,6 +384,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """Parse command-line arguments, load plugins, and run the requested subcommand."""
     parser = build_parser()
     args = parser.parse_args()
 

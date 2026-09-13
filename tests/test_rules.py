@@ -1,3 +1,4 @@
+"""Tests for the evaluation logic and verdict generation of built-in filter rules."""
 from __future__ import annotations
 
 import unittest

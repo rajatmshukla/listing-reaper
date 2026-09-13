@@ -1,3 +1,10 @@
+"""Listing source protocols and file-based fixture ingestion for listing-reaper.
+
+Owns source abstractions and parsing of local listing exports in JSONL and CSV formats.
+Does not own network fetching, filtering rules, ranking algorithms, or state tracking.
+Called by the workflow runner, simulator, or CLI subcommands to load listing datasets.
+Public exports: FixtureSource and Source.
+"""
 from __future__ import annotations
 
 import csv
@@ -32,6 +39,7 @@ class FixtureSource:
         seed: int | None = None,
         field_map: dict[str, str] | None = None,
     ) -> None:
+        """Initialize the fixture source, loading and parsing records from path."""
         self.path = Path(path)
         self.name = self.path.name
         self.errors: list[tuple[str, int, str]] = []
@@ -42,6 +50,7 @@ class FixtureSource:
         self._load()
 
     def _load(self) -> None:
+        """Dispatch fixture loading by file extension and apply shuffle seed if configured."""
         if not self.path.exists():
             raise FileNotFoundError(f"Fixture file not found: {self.path}")
 
@@ -63,6 +72,7 @@ class FixtureSource:
             self.listings = shuffled
 
     def _load_jsonl(self) -> None:
+        """Parse records line-by-line from a JSON Lines fixture file."""
         with self.path.open("r", encoding="utf-8") as f:
             for line_no, line in enumerate(f, start=1):
                 stripped = line.strip()
@@ -91,6 +101,7 @@ class FixtureSource:
                     )
 
     def _load_csv(self) -> None:
+        """Parse records row-by-row from a CSV fixture file."""
         with self.path.open("r", encoding="utf-8", newline="") as f:
             reader = csv.DictReader(f)
             for row_no, row in enumerate(reader, start=2):  # 1 is header
